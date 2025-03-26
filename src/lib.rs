@@ -1,5 +1,24 @@
 use nom::{IResult, Parser};
 
+/// iana-token    = 1*(ALPHA / DIGIT / "-")
+/// ; iCalendar identifier registered with IANA
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn iana_token(input: &str) -> IResult<&str, String> {
+    nom::multi::many1(nom::character::complete::satisfy(|c| {
+        c.is_ascii_alphanumeric() || c == '-'
+    }))
+    .map(|chars| chars.iter().collect::<String>())
+    .parse(input)
+}
+
+/// name          = iana-token / x-name
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn name(input: &str) -> IResult<&str, String> {
+    nom::branch::alt((iana_token, x_name)).parse(input)
+}
+
 /// NON-US-ASCII  = UTF8-2 / UTF8-3 / UTF8-4
 /// ; UTF8-2, UTF8-3, and UTF8-4 are defined in [RFC3629]
 ///
@@ -94,6 +113,19 @@ fn value_char(input: &str) -> IResult<&str, char> {
     .parse(input)
 }
 
+/// vendorid      = 3*(ALPHA / DIGIT)
+/// ; Vendor identification
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn vendorid(input: &str) -> IResult<&str, String> {
+    nom::multi::count(
+        nom::character::complete::satisfy(|c| c.is_ascii_alphanumeric()),
+        3,
+    )
+    .map(|chars| chars.iter().collect::<String>())
+    .parse(input)
+}
+
 /// WSP            =  SP / HTAB
 /// SP             =  %x20
 /// HTAB           =  %x09
@@ -107,9 +139,59 @@ fn wsp(input: &str) -> IResult<&str, char> {
     .parse(input)
 }
 
+/// x-name        = "X-" [vendorid "-"] 1*(ALPHA / DIGIT / "-")
+/// ; Reserved for experimental use.
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn x_name(input: &str) -> IResult<&str, String> {
+    (
+        nom::bytes::tag("X-"),
+        nom::combinator::opt(nom::sequence::terminated(
+            vendorid,
+            nom::character::complete::char('-'),
+        )),
+        nom::multi::many1(nom::character::complete::satisfy(|c| {
+            c.is_ascii_alphanumeric() || c == '-'
+        })),
+    )
+        .map(|(x_, vendorid, chars)| {
+            vec![
+                x_.to_owned(),
+                vendorid.unwrap_or_default(),
+                chars.iter().collect::<String>(),
+            ]
+            .join("")
+        })
+        .parse(input)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_iana_token() {
+        assert_eq!(iana_token("CALENDAR"), Ok(("", "CALENDAR".to_string())));
+        assert_eq!(iana_token("123-456"), Ok(("", "123-456".to_string())));
+        assert_eq!(iana_token("CAL-123"), Ok(("", "CAL-123".to_string())));
+        assert!(iana_token("").is_err());
+        assert!(iana_token("CALENDAR!").is_err()); // Invalid character
+    }
+
+    #[test]
+    fn test_name() {
+        // iana-token
+        assert_eq!(name("CALENDAR"), Ok(("", "CALENDAR".to_string())));
+        assert_eq!(name("123-456"), Ok(("", "123-456".to_string())));
+
+        // x-name
+        assert_eq!(name("X-TEST"), Ok(("", "X-TEST".to_string())));
+        assert_eq!(name("X-VND-123"), Ok(("", "X-VND-123".to_string())));
+
+        assert!(name("").is_err());
+        assert!(name("CALENDAR!").is_err());
+        assert!(name("X-").is_err());
+    }
 
     #[test]
     fn test_non_us_ascii() {
@@ -205,9 +287,28 @@ mod tests {
     }
 
     #[test]
+    fn test_vendorid() {
+        assert_eq!(vendorid("ABC"), Ok(("", "ABC".to_string())));
+        assert_eq!(vendorid("123"), Ok(("", "123".to_string())));
+        assert_eq!(vendorid("A1B"), Ok(("", "A1B".to_string())));
+        assert!(vendorid("AB").is_err());
+        assert!(vendorid("AB!").is_err());
+    }
+
+    #[test]
     fn test_wsp() {
         assert_eq!(wsp(" "), Ok(("", ' ')));
         assert_eq!(wsp("\t"), Ok(("", '\t')));
         assert!(wsp("a").is_err());
+    }
+
+    #[test]
+    fn test_x_name() {
+        assert_eq!(x_name("X-TEST"), Ok(("", "X-TEST".to_string())));
+        assert_eq!(x_name("X-VND-123"), Ok(("", "X-VND-123".to_string())));
+        assert_eq!(x_name("X-123-ABC"), Ok(("", "X-123-ABC".to_string())));
+        assert!(x_name("X-").is_err());
+        assert!(x_name("X-TEST!").is_err());
+        assert!(x_name("TEST").is_err());
     }
 }
