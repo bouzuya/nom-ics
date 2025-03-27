@@ -16,7 +16,8 @@ fn iana_token(input: &str) -> IResult<&str, String> {
 ///
 /// <https://datatracker.ietf.org/doc/html/rfc5545>
 fn name(input: &str) -> IResult<&str, String> {
-    nom::branch::alt((iana_token, x_name)).parse(input)
+    // x-name must be checked before iana-token
+    nom::branch::alt((x_name, iana_token)).parse(input)
 }
 
 /// NON-US-ASCII  = UTF8-2 / UTF8-3 / UTF8-4
@@ -37,6 +38,55 @@ fn name(input: &str) -> IResult<&str, String> {
 fn non_us_ascii(input: &str) -> IResult<&str, char> {
     // `char` primitive type is a single UTF-8 character
     nom::character::complete::satisfy(|c| !matches!(c, '\x00'..='\x7F')).parse(input)
+}
+
+/// param         = param-name "=" param-value *("," param-value)
+/// ; Each property defines the specific ABNF for the parameters
+/// ; allowed on the property.  Refer to specific properties for
+/// ; precise parameter ABNF.
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn param(input: &str) -> IResult<&str, (String, Vec<String>)> {
+    (
+        param_name,
+        nom::character::complete::char('='),
+        param_value,
+        nom::multi::many0((nom::character::complete::char(','), param_value)),
+    )
+        .map(|(name, _, value, param_values)| {
+            (
+                name,
+                std::iter::once(value)
+                    .chain(param_values.into_iter().map(|(_, param_value)| param_value))
+                    .collect::<Vec<String>>(),
+            )
+        })
+        .parse(input)
+}
+
+/// param-name    = iana-token / x-name
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn param_name(input: &str) -> IResult<&str, String> {
+    // x-name must be checked before iana-token
+    nom::branch::alt((x_name, iana_token)).parse(input)
+}
+
+/// param-value   = paramtext / quoted-string
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn param_value(input: &str) -> IResult<&str, String> {
+    // quoted-string must be checked before paramtext
+    nom::branch::alt((quoted_string, paramtext)).parse(input)
+}
+
+/// paramtext     = *SAFE-CHAR
+///
+/// <https://datatracker.ietf.org/doc/html/rfc5545>
+fn paramtext(input: &str) -> IResult<&str, String> {
+    nom::multi::many0(safe_char)
+        .map(|chars| chars.iter().collect::<String>())
+        .parse(input)
 }
 
 /// QSAFE-CHAR    = WSP / %x21 / %x23-7E / NON-US-ASCII
@@ -146,10 +196,7 @@ fn wsp(input: &str) -> IResult<&str, char> {
 fn x_name(input: &str) -> IResult<&str, String> {
     (
         nom::bytes::tag("X-"),
-        nom::combinator::opt(nom::sequence::terminated(
-            vendorid,
-            nom::character::complete::char('-'),
-        )),
+        nom::combinator::opt((vendorid, nom::character::complete::char('-'))),
         nom::multi::many1(nom::character::complete::satisfy(|c| {
             c.is_ascii_alphanumeric() || c == '-'
         })),
@@ -157,7 +204,9 @@ fn x_name(input: &str) -> IResult<&str, String> {
         .map(|(x_, vendorid, chars)| {
             vec![
                 x_.to_owned(),
-                vendorid.unwrap_or_default(),
+                vendorid
+                    .map(|(v, h)| format!("{}{}", v, h))
+                    .unwrap_or_default(),
                 chars.iter().collect::<String>(),
             ]
             .join("")
@@ -175,7 +224,7 @@ mod tests {
         assert_eq!(iana_token("123-456"), Ok(("", "123-456".to_string())));
         assert_eq!(iana_token("CAL-123"), Ok(("", "CAL-123".to_string())));
         assert!(iana_token("").is_err());
-        assert!(iana_token("CALENDAR!").is_err()); // Invalid character
+        assert!(iana_token("!CALENDAR").is_err()); // Invalid character
     }
 
     #[test]
@@ -189,8 +238,10 @@ mod tests {
         assert_eq!(name("X-VND-123"), Ok(("", "X-VND-123".to_string())));
 
         assert!(name("").is_err());
-        assert!(name("CALENDAR!").is_err());
-        assert!(name("X-").is_err());
+        assert!(name("!CALENDAR").is_err());
+
+        // X- is an iana-token
+        assert_eq!(name("X-"), Ok(("", "X-".to_string())));
     }
 
     #[test]
@@ -199,6 +250,77 @@ mod tests {
         assert_eq!(non_us_ascii("ñ"), Ok(("", 'ñ')));
         assert!(non_us_ascii("a").is_err());
         assert!(non_us_ascii("\x7F").is_err());
+    }
+
+    #[test]
+    fn test_param() {
+        assert_eq!(
+            param("NAME=value1,value2,value3"),
+            Ok((
+                "",
+                (
+                    "NAME".to_string(),
+                    vec![
+                        "value1".to_string(),
+                        "value2".to_string(),
+                        "value3".to_string()
+                    ]
+                )
+            ))
+        );
+        assert_eq!(
+            param("NAME=value1"),
+            Ok(("", ("NAME".to_string(), vec!["value1".to_string()])))
+        );
+        assert_eq!(
+            param("NAME="),
+            Ok(("", ("NAME".to_string(), vec!["".to_string()])))
+        );
+        assert!(param("NAME").is_err());
+        assert!(param("=value1").is_err());
+    }
+
+    #[test]
+    fn test_param_name() {
+        // iana-token
+        assert_eq!(param_name("CALENDAR"), Ok(("", "CALENDAR".to_string())));
+        assert_eq!(param_name("123-456"), Ok(("", "123-456".to_string())));
+
+        // x-name
+        assert_eq!(param_name("X-TEST"), Ok(("", "X-TEST".to_string())));
+        assert_eq!(param_name("X-VND-123"), Ok(("", "X-VND-123".to_string())));
+
+        assert!(param_name("").is_err());
+        assert!(param_name("!CALENDAR").is_err());
+
+        // X- is an iana-token
+        assert_eq!(param_name("X-"), Ok(("", "X-".to_string())));
+    }
+
+    #[test]
+    fn test_param_value() {
+        // paramtext
+        assert_eq!(param_value("value"), Ok(("", "value".to_string())));
+        assert_eq!(param_value("héllo"), Ok(("", "héllo".to_string())));
+
+        // quoted-string
+        assert_eq!(param_value("\"quoted\""), Ok(("", "quoted".to_string())));
+        assert_eq!(param_value("\"héllo\""), Ok(("", "héllo".to_string())));
+
+        assert_eq!(param_value(""), Ok(("", "".to_string())));
+        assert_eq!(
+            param_value("\"unterminated"),
+            Ok(("\"unterminated", "".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_paramtext() {
+        assert_eq!(paramtext("value"), Ok(("", "value".to_string())));
+        assert_eq!(paramtext("héllo"), Ok(("", "héllo".to_string())));
+        assert_eq!(paramtext("value123"), Ok(("", "value123".to_string())));
+        assert_eq!(paramtext(""), Ok(("", "".to_string())));
+        assert_eq!(paramtext(";invalid"), Ok((";invalid", "".to_string())));
     }
 
     #[test]
@@ -308,7 +430,7 @@ mod tests {
         assert_eq!(x_name("X-VND-123"), Ok(("", "X-VND-123".to_string())));
         assert_eq!(x_name("X-123-ABC"), Ok(("", "X-123-ABC".to_string())));
         assert!(x_name("X-").is_err());
-        assert!(x_name("X-TEST!").is_err());
+        assert!(x_name("!X-TEST").is_err());
         assert!(x_name("TEST").is_err());
     }
 }
