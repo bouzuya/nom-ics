@@ -1,3 +1,4 @@
+mod calprops;
 mod contentline;
 mod escaped_char;
 mod iana_token;
@@ -20,6 +21,7 @@ mod vendorid;
 mod wsp;
 mod x_name;
 
+pub use self::calprops::calprops;
 pub use self::contentline::contentline;
 pub use self::escaped_char::escaped_char;
 pub use self::iana_token::iana_token;
