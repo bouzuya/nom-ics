@@ -1,4 +1,5 @@
 mod contentline;
+mod escaped_char;
 mod iana_token;
 mod name;
 mod non_us_ascii;
@@ -17,6 +18,7 @@ mod wsp;
 mod x_name;
 
 pub use self::contentline::contentline;
+pub use self::escaped_char::escaped_char;
 pub use self::iana_token::iana_token;
 pub use self::name::name;
 pub use self::non_us_ascii::non_us_ascii;
