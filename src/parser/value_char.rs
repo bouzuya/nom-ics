@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::{non_us_ascii, wsp};
+use crate::parser::{non_us_ascii, wsp};
 
 /// VALUE-CHAR    = WSP / %x21-7E / NON-US-ASCII
 /// ; Any textual character

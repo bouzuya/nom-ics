@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::vendorid;
+use crate::parser::vendorid;
 
 /// x-name        = "X-" [vendorid "-"] 1*(ALPHA / DIGIT / "-")
 /// ; Reserved for experimental use.

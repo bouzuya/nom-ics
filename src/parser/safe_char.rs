@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::{non_us_ascii, wsp};
+use crate::parser::{non_us_ascii, wsp};
 
 /// SAFE-CHAR     = WSP / %x21 / %x23-2B / %x2D-39 / %x3C-7E
 ///               / NON-US-ASCII

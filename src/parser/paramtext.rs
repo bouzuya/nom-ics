@@ -1,5 +1,6 @@
-use crate::safe_char;
 use nom::{IResult, Parser};
+
+use crate::parser::safe_char;
 
 /// paramtext     = *SAFE-CHAR
 ///

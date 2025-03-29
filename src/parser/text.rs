@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::{escaped_char::escaped_char, tsafe_char::tsafe_char};
+use crate::parser::{escaped_char, tsafe_char};
 
 /// text       = *(TSAFE-CHAR / ":" / DQUOTE / ESCAPED-CHAR)
 /// ; Folded according to description above

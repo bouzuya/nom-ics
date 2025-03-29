@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::{name, param, value};
+use crate::parser::{name, param, value};
 
 /// contentline   = name *(";" param ) ":" value CRLF
 /// ; This ABNF is just a general definition for an initial parsing

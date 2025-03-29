@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::text;
+use crate::parser::text;
 
 /// pidvalue   = text
 /// ;Any text that describes the product and version

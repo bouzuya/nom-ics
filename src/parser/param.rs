@@ -1,5 +1,6 @@
-use crate::{param_name, param_value};
 use nom::{IResult, Parser};
+
+use crate::parser::{param_name, param_value};
 
 /// param         = param-name "=" param-value *("," param-value)
 /// ; Each property defines the specific ABNF for the parameters

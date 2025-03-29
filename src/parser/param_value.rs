@@ -1,5 +1,6 @@
-use crate::{paramtext, quoted_string};
 use nom::{IResult, Parser};
+
+use crate::parser::{paramtext, quoted_string};
 
 /// param-value   = paramtext / quoted-string
 ///

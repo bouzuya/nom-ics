@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::prodid;
+use crate::parser::prodid;
 
 /// calprops   = *(
 ///               ;

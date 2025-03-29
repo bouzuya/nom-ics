@@ -1,5 +1,6 @@
-use crate::{iana_token, x_name};
 use nom::{IResult, Parser};
+
+use crate::parser::{iana_token, x_name};
 
 /// param-name    = iana-token / x-name
 ///

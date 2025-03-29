@@ -1,5 +1,6 @@
-use crate::value_char;
 use nom::{IResult, Parser};
+
+use crate::parser::value_char;
 
 /// value         = *VALUE-CHAR
 ///

@@ -1,5 +1,6 @@
-use crate::qsafe_char;
 use nom::{IResult, Parser};
+
+use crate::parser::qsafe_char;
 
 /// quoted-string = DQUOTE *QSAFE-CHAR DQUOTE
 ///

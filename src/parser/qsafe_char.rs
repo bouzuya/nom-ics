@@ -1,5 +1,6 @@
-use crate::{non_us_ascii, wsp};
 use nom::{IResult, Parser};
+
+use crate::parser::{non_us_ascii, wsp};
 
 /// QSAFE-CHAR    = WSP / %x21 / %x23-7E / NON-US-ASCII
 /// ; Any character except CONTROL and DQUOTE

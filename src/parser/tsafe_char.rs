@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::wsp;
+use crate::parser::{non_us_ascii, wsp};
 
 /// TSAFE-CHAR = WSP / %x21 / %x23-2B / %x2D-39 / %x3C-5B /
 ///              %x5D-7E / NON-US-ASCII
@@ -23,7 +23,7 @@ pub fn tsafe_char(input: &str) -> IResult<&str, char> {
         // except '\x5C' ('\')
         nom::character::complete::satisfy(|c| matches!(c, '\x5D'..='\x7E')),
         // except '\x7F' (part of CONTROL)
-        crate::non_us_ascii,
+        non_us_ascii,
     ))
     .parse(input)
 }

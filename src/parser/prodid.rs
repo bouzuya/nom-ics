@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::pidvalue;
+use crate::parser::pidvalue;
 
 /// prodid     = "PRODID" pidparam ":" pidvalue CRLF
 ///
