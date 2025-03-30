@@ -1,11 +1,14 @@
 use nom::{IResult, Parser};
 
-use crate::parser::pidvalue;
+use crate::{
+    model::{Property, PropertyName},
+    parser::pidvalue,
+};
 
 /// prodid     = "PRODID" pidparam ":" pidvalue CRLF
 ///
 /// <https://datatracker.ietf.org/doc/html/rfc5545#section-3.7.3>
-pub fn prodid(input: &str) -> IResult<&str, String> {
+pub fn prodid(input: &str) -> IResult<&str, Property> {
     (
         nom::bytes::complete::tag("PRODID"),
         // FIXME:
@@ -13,12 +16,20 @@ pub fn prodid(input: &str) -> IResult<&str, String> {
         pidvalue,
         nom::character::complete::line_ending,
     )
-        .map(|(_, _, pidvalue, _)| pidvalue)
+        .map(|(_, _, pidvalue, _)| {
+            Property(
+                PropertyName("PRODID".to_owned()),
+                Default::default(),
+                pidvalue,
+            )
+        })
         .parse(input)
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::model::PropertyValue;
+
     use super::*;
 
     #[test]
@@ -26,7 +37,14 @@ mod tests {
         let input = "PRODID:-//Example Corp//NONSGML Example//EN\r\n";
         assert_eq!(
             prodid(input),
-            Ok(("", "-//Example Corp//NONSGML Example//EN".to_string()))
+            Ok((
+                "",
+                Property(
+                    PropertyName("PRODID".to_owned()),
+                    Default::default(),
+                    PropertyValue::Text("-//Example Corp//NONSGML Example//EN".to_string()),
+                )
+            ))
         );
     }
 

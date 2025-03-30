@@ -1,6 +1,6 @@
 use nom::{IResult, Parser};
 
-use crate::parser::prodid;
+use crate::{model::Property, parser::prodid};
 
 /// calprops   = *(
 ///               ;
@@ -22,9 +22,9 @@ use crate::parser::prodid;
 ///               )
 ///
 /// <https://datatracker.ietf.org/doc/html/rfc5545#section-3.6>
-pub fn calprops(input: &str) -> IResult<&str, String> {
+pub fn calprops(input: &str) -> IResult<&str, Vec<Property>> {
     // FIXME
-    nom::multi::many0(prodid).map(|v| v.join("")).parse(input)
+    nom::multi::many0(prodid).parse(input)
 }
 
 // TODO: tests

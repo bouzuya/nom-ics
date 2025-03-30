@@ -6,19 +6,24 @@ struct Component(ComponentName, Vec<Property>, Vec<Component>);
 
 struct ComponentName(String);
 
-struct Property(
-    PropertyName,
-    BTreeMap<ParameterName, ParameterValue>,
-    PropertyValue,
+#[derive(Debug, PartialEq)]
+pub struct Property(
+    pub(crate) PropertyName,
+    pub(crate) BTreeMap<ParameterName, ParameterValue>,
+    pub(crate) PropertyValue,
 );
 
-struct PropertyName(String);
+#[derive(Debug, PartialEq)]
+pub struct PropertyName(pub(crate) String);
 
-struct ParameterName(String);
+#[derive(Debug, PartialEq)]
+pub struct ParameterName(String);
 
-struct ParameterValue(Vec<String>);
+#[derive(Debug, PartialEq)]
+pub struct ParameterValue(Vec<String>);
 
-enum PropertyValue {
+#[derive(Debug, PartialEq)]
+pub enum PropertyValue {
     Binary(Vec<u8>),
     Boolean(bool),
     CalAddress(String),
