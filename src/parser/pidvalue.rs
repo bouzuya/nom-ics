@@ -15,13 +15,12 @@ pub fn pidvalue(input: &str) -> IResult<&str, PropertyValue> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::{PropertyValue, Text};
 
     #[test]
     fn test() {
         let input = "-//ABC Corporation//NONSGML My Product//EN";
-        assert_eq!(
-            pidvalue(input),
-            Ok(("", PropertyValue::Text(input.to_string())))
-        );
+        let expected = Ok(("", PropertyValue::Text(Text(input.to_owned()))));
+        assert_eq!(pidvalue(input), expected);
     }
 }

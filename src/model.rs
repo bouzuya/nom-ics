@@ -34,9 +34,12 @@ pub enum PropertyValue {
     Integer(i32),
     Period(String),
     Recur(String),
-    Text(String),
+    Text(Text),
     Time(String),
     Uri(String),
     UtcOffset(String),
     XType(String),
 }
+
+#[derive(Debug, PartialEq)]
+pub struct Text(pub(crate) String);

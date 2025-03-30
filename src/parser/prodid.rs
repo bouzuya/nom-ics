@@ -28,7 +28,7 @@ pub fn prodid(input: &str) -> IResult<&str, Property> {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::PropertyValue;
+    use crate::model::{PropertyValue, Text};
 
     use super::*;
 
@@ -42,7 +42,7 @@ mod tests {
                 Property(
                     PropertyName("PRODID".to_owned()),
                     Default::default(),
-                    PropertyValue::Text("-//Example Corp//NONSGML Example//EN".to_string()),
+                    PropertyValue::Text(Text("-//Example Corp//NONSGML Example//EN".to_owned())),
                 )
             ))
         );
