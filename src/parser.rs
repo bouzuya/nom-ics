@@ -1,3 +1,4 @@
+mod b_char;
 mod calprops;
 mod contentline;
 mod escaped_char;
@@ -21,6 +22,7 @@ mod vendorid;
 mod wsp;
 mod x_name;
 
+pub use self::b_char::b_char;
 pub use self::calprops::calprops;
 pub use self::contentline::contentline;
 pub use self::escaped_char::escaped_char;
