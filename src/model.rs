@@ -24,7 +24,7 @@ pub struct ParameterValue(Vec<String>);
 
 #[derive(Debug, PartialEq)]
 pub enum PropertyValue {
-    Binary(Vec<u8>),
+    Binary(Binary),
     Boolean(bool),
     CalAddress(String),
     Date(String),
@@ -43,3 +43,6 @@ pub enum PropertyValue {
 
 #[derive(Debug, PartialEq)]
 pub struct Text(pub(crate) String);
+
+#[derive(Debug, PartialEq)]
+pub struct Binary(pub(crate) String);
