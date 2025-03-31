@@ -1,4 +1,5 @@
 mod b_char;
+mod b_end;
 mod calprops;
 mod contentline;
 mod escaped_char;
@@ -23,6 +24,7 @@ mod wsp;
 mod x_name;
 
 pub use self::b_char::b_char;
+pub use self::b_end::b_end;
 pub use self::calprops::calprops;
 pub use self::contentline::contentline;
 pub use self::escaped_char::escaped_char;
