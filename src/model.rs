@@ -46,3 +46,9 @@ pub struct Text(pub(crate) String);
 
 #[derive(Debug, PartialEq)]
 pub struct Binary(pub(crate) String);
+
+#[derive(Debug, PartialEq)]
+pub enum Boolean {
+    False,
+    True,
+}
