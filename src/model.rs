@@ -26,7 +26,7 @@ pub struct ParameterValue(Vec<String>);
 pub enum PropertyValue {
     Binary(Binary),
     Boolean(bool),
-    CalAddress(String),
+    CalAddress(CalendarUserAddress),
     Date(String),
     DateTime(String),
     Duration(String),
@@ -52,3 +52,6 @@ pub enum Boolean {
     False,
     True,
 }
+
+#[derive(Debug, PartialEq)]
+pub struct CalendarUserAddress(pub(crate) String);
