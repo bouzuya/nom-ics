@@ -6,6 +6,7 @@ mod cal_address;
 mod calprops;
 mod contentline;
 mod date_fullyear;
+mod date_month;
 mod escaped_char;
 mod iana_token;
 mod name;
